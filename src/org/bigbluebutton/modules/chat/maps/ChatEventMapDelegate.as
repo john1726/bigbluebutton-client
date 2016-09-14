@@ -23,7 +23,7 @@ package org.bigbluebutton.modules.chat.maps {
 	
 	import org.bigbluebutton.common.events.CloseWindowEvent;
 	import org.bigbluebutton.common.events.OpenWindowEvent;
-	import org.bigbluebutton.modules.chat.model.ChatOptions;
+	import org.bigbluebutton.modules.chat.model.ChatTimer;
 	import org.bigbluebutton.modules.chat.views.ChatWindow;
 	import org.bigbluebutton.util.i18n.ResourceUtil;
 	
@@ -35,7 +35,7 @@ package org.bigbluebutton.modules.chat.maps {
 		private var _chatWindowOpen:Boolean = false;
 		private var globalDispatcher:Dispatcher;
 		
-		private var chatOptions:ChatOptions;
+		private var chatTimer:ChatTimer;
 				
 		public function ChatEventMapDelegate() {
 			this.dispatcher = dispatcher;
@@ -43,13 +43,13 @@ package org.bigbluebutton.modules.chat.maps {
 			globalDispatcher = new Dispatcher();
 		}
 
-		private function getChatOptions():void {
-			chatOptions = new ChatOptions();
+		private function getChatTimer():void {
+			chatTimer = new ChatTimer();
 		}
 		
 		public function openChatWindow():void {	
-			getChatOptions();
-			_chatWindow.chatOptions = chatOptions;
+			getChatTimer();
+			_chatWindow.chatTimer = chatTimer;
 		   	_chatWindow.title = ResourceUtil.getInstance().getString("bbb.chat.title");
 		   	_chatWindow.showCloseButton = false;
 		   	

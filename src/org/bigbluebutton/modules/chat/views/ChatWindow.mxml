@@ -44,7 +44,7 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 			import org.bigbluebutton.common.IBbbModuleWindow;
 			import org.bigbluebutton.common.events.LocaleChangeEvent;
 			import org.bigbluebutton.main.events.ShortcutEvent;
-			import org.bigbluebutton.modules.chat.model.ChatOptions;
+			import org.bigbluebutton.modules.chat.model.ChatTimer;
 			import org.bigbluebutton.util.i18n.ResourceUtil;
 			
 			private var _xPosition:int;
@@ -52,10 +52,10 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 			private var keyCombos:Object;
 			private var disp:Dispatcher = new Dispatcher();
 			private var dispState:String;
-			[Bindable] public var chatOptions:ChatOptions;
+			[Bindable] public var chatTimer:ChatTimer;
 			
 			public function getPrefferedPosition():String{
-				return chatOptions.position;
+				return chatTimer.position;
 			} 
 			
 			private function onCreationComplete():void {
@@ -64,11 +64,11 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 				dispState = FlexGlobals.topLevelApplication.stage.displayState;
 				
 				hotkeyCapture();
-				titleBarOverlay.tabIndex = chatOptions.baseTabIndex;
+				titleBarOverlay.tabIndex = chatTimer.baseTabIndex;
 				
-				minimizeBtn.tabIndex = chatOptions.baseTabIndex+1;
-				maximizeRestoreBtn.tabIndex = chatOptions.baseTabIndex+2;
-				closeBtn.tabIndex = chatOptions.baseTabIndex+3;
+				minimizeBtn.tabIndex = chatTimer.baseTabIndex+1;
+				maximizeRestoreBtn.tabIndex = chatTimer.baseTabIndex+2;
+				closeBtn.tabIndex = chatTimer.baseTabIndex+3;
 
 				resourcesChanged(); // update the window controls once they've been created
 			}
@@ -179,5 +179,5 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 		]]>
 	</mx:Script>
 	
-	<views:ChatView id="chatView" chatOptions="{chatOptions}" includeInLayout="false"/>
+	<views:ChatView id="chatView" chatTimer="{chatTimer}" includeInLayout="false"/>
 </CustomMdiWindow>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+
+BigBlueButton open source conferencing system - http://www.bigbluebutton.org/
+
+Copyright (c) 2016 BigBlueButton Inc. and by respective authors (see below).
+
+This program is free software; you can redistribute it and/or modify it under the
+terms of the GNU Lesser General Public License as published by the Free Software
+Foundation; either version 3.0 of the License, or (at your option) any later
+version.
+
+BigBlueButton is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License along
+with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
+
+-->
+
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:mate="http://mate.asfusion.com/"
+	xmlns:common="org.bigbluebutton.common.*"
+    xmlns:chat="org.bigbluebutton.modules.chat.views.*"
+    implements="org.bigbluebutton.modules.chat.views.ITimerTab"
+	verticalScrollPolicy="off">
+
+  <mx:Style>
+    .chatColorPickerStyle {
+      backgroundColor:#E5E6E7;
+      columnCount:12;
+      horizontalGap:0;
+      previewHeight:22;
+      previewWidth:45;
+      swatchGridBackgroundColor:#000000;
+      swatchGridBorderSize:0;
+      swatchHeight:60;
+      swatchHighlightColor:#FFFFFF;
+      swatchHighlightSize:1;
+      swatchWidth:12;
+      textFieldWidth:72;
+      verticalGap:0;
+    }
+    
+  </mx:Style>
+  
+	<mx:Script>
+		<![CDATA[
+			import org.as3commons.lang.StringUtils;
+			import org.as3commons.logging.api.ILogger;
+			import org.as3commons.logging.api.getClassLogger;
+			import org.bigbluebutton.core.UsersUtil;
+			import org.bigbluebutton.modules.chat.model.ChatTimer;   
+			import org.bigbluebutton.util.i18n.ResourceUtil;
+                        
+                        var chatTimer:ChatTimer = new ChatTimer();     
+		]]>
+		
+	</mx:Script>
+</mx:VBox>

@@ -1,0 +1,530 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  BigBlueButton open source conferencing system - http://www.bigbluebutton.org
+  
+  Copyright (c) 2010 BigBlueButton Inc. and by respective authors (see below).
+  
+  BigBlueButton is free software; you can redistribute it and/or modify it under the 
+  terms of the GNU Lesser General Public License as published by the Free Software 
+  Foundation; either version 2.1 of the License, or (at your option) any later 
+  version. 
+  
+  BigBlueButton is distributed in the hope that it will be useful, but WITHOUT ANY 
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A 
+  PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
+  
+  You should have received a copy of the GNU Lesser General Public License along 
+  with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
+ 
+  $Id: $
+--> 
+
+<mdi:CustomMdiWindow xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:mdi="org.bigbluebutton.common.*" 
+	xmlns:flc="flexlib.controls.*"
+	implements="org.bigbluebutton.common.IBbbModuleWindow" 
+	xmlns:mate="http://mate.asfusion.com/"
+	creationComplete="onCreationComplete()"
+	title="{ResourceUtil.getInstance().getString('bbb.users.title')}"
+	showCloseButton="false">
+
+	<mate:Listener type="{LocaleChangeEvent.LOCALE_CHANGED}" method="localeChanged" />
+	<mate:Listener type="{ShortcutEvent.RAISE_HAND}" method="remoteRaiseHand" />
+	<mate:Listener type="{ShortcutEvent.FOCUS_USERS_WINDOW}" method="focusWindow" />
+	<mate:Listener type="{ShortcutEvent.MUTE_ALL_BUT_PRES}" method="remoteMuteAllButPres" />
+	<mate:Listener type="{MeetingMutedEvent.MEETING_MUTED}" method="handleMeetingMuted" />
+	<mate:Listener type="{LockControlEvent.CHANGED_LOCK_SETTINGS}" method="handleChangedLockSettingsEvent" />
+	<mx:Script>
+		<![CDATA[
+			import com.asfusion.mate.events.Dispatcher;
+			
+			import mx.binding.utils.BindingUtils;
+			import mx.collections.ArrayCollection;
+			import mx.controls.Menu;
+			import mx.controls.listClasses.IListItemRenderer;
+			import mx.core.FlexGlobals;
+			import mx.events.ListEvent;
+			import mx.events.MenuEvent;
+			import mx.managers.PopUpManager;
+			
+			import org.as3commons.logging.api.ILogger;
+			import org.as3commons.logging.api.getClassLogger;
+			import org.bigbluebutton.common.IBbbModuleWindow;
+			import org.bigbluebutton.common.Images;
+			import org.bigbluebutton.common.events.LocaleChangeEvent;
+			import org.bigbluebutton.core.UsersUtil;
+			import org.bigbluebutton.core.events.LockControlEvent;
+			import org.bigbluebutton.core.events.VoiceConfEvent;
+			import org.bigbluebutton.core.managers.UserManager;
+			import org.bigbluebutton.core.model.MeetingModel;
+			import org.bigbluebutton.core.vo.LockSettingsVO;
+			import org.bigbluebutton.main.events.ShortcutEvent;
+			import org.bigbluebutton.main.model.users.BBBUser;
+			import org.bigbluebutton.main.model.users.events.EmojiStatusEvent;
+			import org.bigbluebutton.main.model.users.events.KickUserEvent;
+			import org.bigbluebutton.main.model.users.events.RoleChangeEvent;
+			import org.bigbluebutton.main.views.MainCanvas;
+			import org.bigbluebutton.modules.users.events.MeetingMutedEvent;
+			import org.bigbluebutton.modules.users.events.UsersRollEvent;
+			import org.bigbluebutton.modules.users.model.UsersOptions;
+			import org.bigbluebutton.util.i18n.ResourceUtil;
+			
+			private static const LOGGER:ILogger = getClassLogger(UsersWindow);      
+
+			private var dispatcher:Dispatcher;
+			
+			private var keyCombos:Object;
+			private var modifier:String;
+			
+			[Bindable]
+			private var roomMuted:Boolean = false;
+			
+			[Bindable]
+			private var roomLocked:Boolean = false;
+			
+			private var paramsMenu:Menu;
+			private var paramsMenuData:Array = [];
+
+			[Bindable]
+			public var partOptions:UsersOptions;
+			
+			[Bindable]
+			private var images:Images = new Images();
+			
+			[Bindable]
+			private var users:ArrayCollection = new ArrayCollection();
+			
+			private var amIModerator:Boolean = false;
+			
+			private const FOCUS_USERS_LIST:String = "Focus Users List";
+			private const MAKE_PRESENTER:String = "Make Presenter";
+			private const KICK_USER:String = "Kick User";
+			private const MUTE_USER:String = "Mute User";
+			private const MUTE_ALL_USER:String = "Mute All User";
+			
+			private var muteMeRolled:Boolean = false;
+			
+			private function onCreationComplete():void {
+				dispatcher = new Dispatcher();
+			
+				users = UserManager.getInstance().getConference().users;
+				amIModerator = UserManager.getInstance().getConference().amIModerator();
+				
+				settingsBtn.visible = settingsBtn.includeInLayout = partOptions.enableSettingsButton && amIModerator;
+				
+				BindingUtils.bindSetter(updateNumberofUsers, users, "length");
+				
+				this.addEventListener(KeyboardEvent.KEY_DOWN, handleKeyDown);
+				ResourceUtil.getInstance().addEventListener(Event.CHANGE, localeChanged); // Listen for locale changing
+				
+				modifier = ExternalInterface.call("determineModifier");
+				loadKeyCombos(modifier);
+				
+				resourcesChanged();
+				
+				roomMuted = MeetingModel.getInstance().meetingMuted;
+				var lockSettings:LockSettingsVO = UserManager.getInstance().getConference().getLockSettings();
+				roomLocked = lockSettings.isAnythingLocked() && ( lockSettings.getLockOnJoin() || UsersUtil.isAnyoneLocked());
+				
+				titleBarOverlay.tabIndex = partOptions.baseTabIndex;
+				minimizeBtn.tabIndex = partOptions.baseTabIndex+1;
+				maximizeRestoreBtn.tabIndex = partOptions.baseTabIndex+2;
+				closeBtn.tabIndex = partOptions.baseTabIndex+3;
+				
+				stage.addEventListener(MouseEvent.MOUSE_OVER, handleStageMouseOver);
+				usersGrid.addEventListener(MouseEvent.MOUSE_OVER, handleUsersGridMouseOver);
+				
+				addContextMenuItems();
+			}
+			
+			public function getPrefferedPosition():String{
+				return MainCanvas.TOP_LEFT;
+			}
+			
+			private function addContextMenuItems():void {
+				var contextMenuItems:Array = new Array();
+				
+				var exportUsersItem:ContextMenuItem = new ContextMenuItem(ResourceUtil.getInstance().getString("bbb.users.usersGrid.contextmenu.exportusers"));
+				exportUsersItem.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT, exportUsersItemHandler);
+				contextMenuItems.push(exportUsersItem);
+				
+				this.customContextMenuItems = contextMenuItems;
+			}
+			
+			private function exportUsersItemHandler(e:ContextMenuEvent):void{
+				if (e.target.caption == ResourceUtil.getInstance().getString("bbb.users.usersGrid.contextmenu.exportusers")) {
+					var userNames:String = "";
+					var returnStr:String = (Capabilities.os.indexOf("Windows") >= 0 ? "\r\n" : "\r");
+					for (var i:int = 0; i < users.length; i++) {
+						userNames += users[i].name + returnStr;
+					}
+					System.setClipboard(userNames);
+				}
+			}
+			
+			private function updateNumberofUsers(numUsers:int):void {
+				if (numUsers > 8)
+					this.title = ResourceUtil.getInstance().getString('bbb.users.title', [":", numUsers]);
+				else 
+					this.title = ResourceUtil.getInstance().getString('bbb.users.title', ["", ""]);
+			}
+			
+			private function localeChanged(e:Event):void {
+				updateNumberofUsers(users.length);
+				resourcesChanged();
+			}
+			
+			private function changeButtons(presenter:Boolean):void {
+				emojiStatusBtn.visible = emojiStatusBtn.includeInLayout = partOptions.enableEmojiStatus;
+			}
+			
+			/*
+			 * Work around for a bug with the users grid. When you click on one of the buttons in an item renderer the client 
+			 * locks up briefly and any mouse movements while the client is locked up are ignored. This means that roll outs 
+			 * aren't fired if the mouse is moved quickly while the client is updating. This block of code watches for 
+			 * anything outside of the usersGrid being rolled over and notifies the item renders that they should reset.
+			 * 
+			 *  - Chad
+			 */
+			private var rolledOver:Boolean = false;
+			private var o:Object;
+			
+			private function handleUsersGridMouseOver(e:MouseEvent):void {
+				rolledOver = true;
+				o = e.target;
+			}
+			
+			private function handleStageMouseOver(e:MouseEvent):void {
+				if (rolledOver && o != e.target) {
+					rolledOver = false;
+					o = null;
+					var rollEvent:UsersRollEvent = new UsersRollEvent(UsersRollEvent.USER_ROLL_OUT, null);
+					dispatcher.dispatchEvent(rollEvent);
+				}
+			}
+			
+			/*
+			 * End of the work around.
+			 */
+			
+			private function onItemRollOver(event:ListEvent):void{
+				var item:IListItemRenderer = event.itemRenderer;
+				var user:BBBUser = item.data as BBBUser;
+				var rollEvent:UsersRollEvent = new UsersRollEvent(UsersRollEvent.USER_ROLL_OVER, user.userID);
+				dispatcher.dispatchEvent(rollEvent);
+			}
+			
+			private function onItemRollOut(event:ListEvent):void{
+				var item:IListItemRenderer = event.itemRenderer;
+				var user:BBBUser = item.data as BBBUser;
+				var rollEvent:UsersRollEvent = new UsersRollEvent(UsersRollEvent.USER_ROLL_OUT, user.userID);
+				dispatcher.dispatchEvent(rollEvent);
+			}
+			
+			private function openEmojiStatusMenu() : void
+			{
+				var grid : EmojiGrid = PopUpManager.createPopUp(DisplayObject(FlexGlobals.topLevelApplication), EmojiGrid, false) as EmojiGrid;
+				var menuXY:Point = emojiStatusBtn.localToGlobal(new Point(emojiStatusBtn.width + 2, emojiStatusBtn.height - grid.height));
+				grid.x = menuXY.x;
+				grid.y = menuXY.y;
+			}
+			
+			private function openSettings():void {
+				paramsMenuData = [];
+				paramsMenuData.push({label: ResourceUtil.getInstance().getString('bbb.users.settings.clearAllStatus'), handler:resetEmojiStatuses});
+				
+				if (!roomMuted) {
+					paramsMenuData.push({label: ResourceUtil.getInstance().getString('bbb.users.settings.muteAll'), icon: images.audio_muted, handler: muteAll});
+					if (UserManager.getInstance().getConference().getPresenter())
+						paramsMenuData.push({label: ResourceUtil.getInstance().getString('bbb.users.settings.muteAllExcept') + ": " + UserManager.getInstance().getConference().getPresenter().name, icon: images.audio_muted, handler:muteAlmostAll});
+				} else
+					paramsMenuData.push({label: ResourceUtil.getInstance().getString('bbb.users.settings.unmuteAll'), icon: images.audio, handler:muteAll});
+								
+				paramsMenuData.push({label: ResourceUtil.getInstance().getString('bbb.users.settings.lockSettings'), icon: images.lock_open, handler: lockSettings});
+				
+				
+				// make sure the previous menu is closed before opening a new one
+				// This could be improved to include a flag that tells if the menu is open,
+				// but it would require an extra listener for the MenuCloseEvent.
+				if (paramsMenu) {
+					paramsMenu.removeEventListener(MenuEvent.ITEM_CLICK, menuClickHandler);
+					paramsMenu.removeEventListener(MenuEvent.MENU_SHOW, menuShowHandler);
+					paramsMenu.hide();
+				}
+				
+				paramsMenu = Menu.createMenu(null, paramsMenuData, true);
+				paramsMenu.variableRowHeight = false;
+				paramsMenu.addEventListener(MenuEvent.ITEM_CLICK, menuClickHandler);
+				paramsMenu.addEventListener(MenuEvent.MENU_SHOW, menuShowHandler);
+				paramsMenu.show();
+			}
+			
+			private function menuClickHandler(e:MenuEvent):void {
+				if(paramsMenuData[e.index] != undefined && paramsMenuData[e.index].handler != undefined) {
+					paramsMenuData[e.index].handler();
+				}
+			}
+			
+			private function menuShowHandler(e:MenuEvent):void {
+				paramsMenu.setFocus();
+				var menuXY:Point = settingsBtn.localToGlobal(new Point(settingsBtn.width + 2, settingsBtn.height - paramsMenu.height));
+				paramsMenu.x = menuXY.x;
+				paramsMenu.y = menuXY.y;
+			}
+			
+			private function handleChangedLockSettingsEvent(e:LockControlEvent):void {
+				var lockSettings:LockSettingsVO = UserManager.getInstance().getConference().getLockSettings();
+				roomLocked = lockSettings.isAnythingLocked() && ( lockSettings.getLockOnJoin() || UsersUtil.isAnyoneLocked());
+			}
+			
+			private function lockSettings():void {
+				var event:LockControlEvent = new LockControlEvent(LockControlEvent.OPEN_LOCK_SETTINGS);
+				dispatcher.dispatchEvent(event);
+			}
+			
+			/*private function unlockAll():void {
+				LogUtil.traceObject("Action: unlockAll");
+				if (amIModerator) {
+					if (roomLocked) {
+						var unlockCommand:LockControlEvent = new LockControlEvent(LockControlEvent.UNLOCK_ALL);
+						dispatchEvent(unlockCommand);
+						roomLocked = false;
+					} else {
+						LogUtil.error("Action: unlockAll, but room is not locked");
+					}
+				}
+			}
+			
+			private function lockAll():void {
+				LogUtil.traceObject("Action: lockAll");
+				if (amIModerator) {
+					if (!roomLocked) {
+						var lockCommand:LockControlEvent = new LockControlEvent(LockControlEvent.LOCK_ALL);
+						dispatchEvent(lockCommand);
+						roomLocked = true;
+					} else {
+						LogUtil.error("Action: lockAll, but room is already locked");
+					}
+				}
+			}
+			
+			private function lockAlmostAll():void {
+				LogUtil.traceObject("Action: lockAlmostAll");
+				
+				if (amIModerator) {
+					if (!roomLocked) {
+						var lockCommand:LockControlEvent = new LockControlEvent(LockControlEvent.LOCK_ALMOST_ALL);
+						dispatchEvent(lockCommand);
+						roomLocked = true;
+					} else {
+						LogUtil.error("Action: lockAlmostAll, but room is already locked");
+					}
+				}
+			}
+			*/
+			
+			private function handleMeetingMuted(e:MeetingMutedEvent):void {
+				roomMuted = MeetingModel.getInstance().meetingMuted;
+			}
+			
+			private function muteAll():void {
+				if (amIModerator) {
+					if (!roomMuted) {
+						var muteCommand:VoiceConfEvent = new VoiceConfEvent(VoiceConfEvent.MUTE_ALL);
+						dispatchEvent(muteCommand);
+						roomMuted = true;
+					} else {
+						var unmuteCommand:VoiceConfEvent = new VoiceConfEvent(VoiceConfEvent.UNMUTE_ALL);
+						dispatchEvent(unmuteCommand);
+						roomMuted = false;
+					}
+				}
+			}
+			
+			private function muteAlmostAll():void {
+				if (amIModerator) {
+					if (!roomMuted) {
+						var muteCommand:VoiceConfEvent = new VoiceConfEvent(VoiceConfEvent.MUTE_ALMOST_ALL);
+						dispatchEvent(muteCommand);
+						roomMuted = true;
+					}
+				}
+			}
+			
+			private function resetEmojiStatuses():void {
+				for (var i:int = 0; i < users.length; i++) {
+					var p:BBBUser = users.getItemAt(i) as BBBUser;
+					if (p.hasEmojiStatus) dispatchEvent(new EmojiStatusEvent(EmojiStatusEvent.EMOJI_STATUS, "none", p.userID));
+        		}
+			}
+			
+			override protected function resourcesChanged():void{
+				super.resourcesChanged();				
+				if (users.length > 8)
+					this.title = ResourceUtil.getInstance().getString('bbb.users.title', [":", users.length]);
+				else 
+					this.title = ResourceUtil.getInstance().getString('bbb.users.title', ["", ""]);
+				
+				if (titleBarOverlay != null) {
+					titleBarOverlay.accessibilityName = ResourceUtil.getInstance().getString('bbb.users.titleBar');
+				}
+				
+				if (windowControls != null) {
+					minimizeBtn.toolTip = ResourceUtil.getInstance().getString("bbb.window.minimizeBtn.toolTip");
+					minimizeBtn.accessibilityName = ResourceUtil.getInstance().getString("bbb.users.minimizeBtn.accessibilityName");
+					
+					maximizeRestoreBtn.toolTip = ResourceUtil.getInstance().getString("bbb.window.maximizeRestoreBtn.toolTip");
+					maximizeRestoreBtn.accessibilityName = ResourceUtil.getInstance().getString("bbb.users.maximizeRestoreBtn.accessibilityName");
+				}
+				
+				if (emojiStatusBtn) {
+					emojiStatusBtn.accessibilityName = ResourceUtil.getInstance().getString('bbb.users.emojiStatusBtn.toolTip');
+				}
+				
+				addContextMenuItems();
+			}
+			
+			private function loadKeyCombos(modifier:String):void {
+				keyCombos = new Object(); // always start with a fresh array bbb.shortcutkey.users.muteall
+				keyCombos[modifier+(ResourceUtil.getInstance().getString('bbb.shortcutkey.users.focusUsers') as String)] = FOCUS_USERS_LIST;
+				keyCombos[modifier+(ResourceUtil.getInstance().getString('bbb.shortcutkey.users.makePresenter') as String)] = MAKE_PRESENTER;
+				keyCombos[modifier+(ResourceUtil.getInstance().getString('bbb.shortcutkey.users.kick') as String)] = KICK_USER;
+				keyCombos[modifier+(ResourceUtil.getInstance().getString('bbb.shortcutkey.users.mute') as String)] = MUTE_USER;
+				keyCombos[modifier+(ResourceUtil.getInstance().getString('bbb.shortcutkey.users.muteall') as String)] = MUTE_ALL_USER;
+				//TODO Include shortcuts to lock control
+				keyCombos[modifier+(ResourceUtil.getInstance().getString('bbb.shortcutkey.general.maximize') as String)] = ShortcutEvent.MAXIMIZE_USERS;
+				keyCombos[modifier+(ResourceUtil.getInstance().getString('bbb.shortcutkey.general.minimize') as String)] = ShortcutEvent.MINIMIZE_USERS;
+			}
+			
+			// Handle general-access hotkeys, regardless of what window the user is focused in
+			private function handleKeyDown(e:KeyboardEvent):void {
+				if (keyCombos == null) loadKeyCombos(modifier);
+				var keyPress:String = (e.ctrlKey  ? "control+" : "") + (e.shiftKey ? "shift+"   : "") +
+					(e.altKey   ? "alt+"     : "") + e.keyCode;		                              
+				if (keyCombos[keyPress]) {
+					switch(keyCombos[keyPress]) {
+						case FOCUS_USERS_LIST:
+							remoteFocusUsers();
+							break;
+						case MAKE_PRESENTER:
+							remoteMakePresenter();
+							break;
+						case KICK_USER:
+							remoteKickUser();
+							break;
+						case MUTE_USER:
+							remoteMuteUser();
+							break;
+						case MUTE_ALL_USER:
+							muteAll();
+							break;
+						case ShortcutEvent.MAXIMIZE_USERS:
+							remoteMaximize();
+							break;
+						case ShortcutEvent.MINIMIZE_USERS:
+							remoteMinimize();
+							break;
+					}
+				}
+			}
+			
+			private function focusWindow(e:ShortcutEvent):void{
+				focusManager.setFocus(titleBarOverlay);
+			}
+			
+			public function remoteRaiseHand(e:ShortcutEvent):void{
+				dispatchEvent(new EmojiStatusEvent(EmojiStatusEvent.EMOJI_STATUS, "raiseHand"));
+			}
+
+			private function remoteMinimize():void{
+				if (!minimized){
+					this.minimize();
+				}
+			}
+			
+			private function remoteMaximize():void{
+				if (!maximized && !minimized){
+					this.maximize();
+				} else{
+					this.restore();
+				}				
+			}
+			
+			public function remoteMakePresenter():void{
+				if (amIModerator && usersGrid.selectedIndex != -1) {
+					var selData:Object = usersGrid.selectedItem;
+					
+					if (!selData.presenter && !selData.phoneUser) {
+						var e:RoleChangeEvent = new RoleChangeEvent(RoleChangeEvent.ASSIGN_PRESENTER);
+						e.userid = selData.userID;
+						e.username = selData.name;
+						dispatchEvent(e);
+					}
+				}
+			}
+			
+			public function remoteKickUser():void{
+				if (amIModerator && usersGrid.selectedIndex != -1 && partOptions.allowKickUser) {
+					var selData:Object = usersGrid.selectedItem;
+					
+					if (!selData.me)
+						dispatchEvent(new KickUserEvent(selData.userID));
+				}
+			}
+			
+			public function remoteMuteUser():void{
+				if (amIModerator && usersGrid.selectedIndex != -1) {
+					var selData:Object = usersGrid.selectedItem;
+					
+					if (selData.voiceJoined) {
+						var e:VoiceConfEvent = new VoiceConfEvent(VoiceConfEvent.MUTE_USER);
+						e.userid = selData.voiceUserid;
+						e.mute = !selData.voiceMuted;
+						dispatchEvent(e);
+					}
+				}
+			}
+			
+			public function remoteFocusUsers():void{
+				focusManager.setFocus(usersGrid);
+				usersGrid.drawFocus(true);
+			}
+			
+			private function remoteMuteAllButPres(e:ShortcutEvent):void{
+				muteAlmostAll();
+			}
+			
+		]]>
+	</mx:Script>
+	
+	<mx:DataGrid id="usersGrid" dataProvider="{users}" editable="false" sortableColumns="true"
+    	dragEnabled="false" width="100%" height="100%" draggableColumns="false"
+    	itemRollOver="onItemRollOver(event)"
+		itemRollOut="onItemRollOut(event)" 
+		tabIndex="{partOptions.baseTabIndex+5}"
+		accessibilityName="{ResourceUtil.getInstance().getString('bbb.users.usersGrid.accessibilityName')}" >
+    	<mx:columns>
+    		<mx:DataGridColumn dataField="userStatus" headerText="{ResourceUtil.getInstance().getString('bbb.users.usersGrid.statusItemRenderer')}" editable="false" width="45" minWidth="45"
+    			itemRenderer="org.bigbluebutton.modules.users.views.StatusItemRenderer" sortable="false" />
+    		<mx:DataGridColumn dataField="name" headerText="{ResourceUtil.getInstance().getString('bbb.users.usersGrid.nameItemRenderer')}" editable="false" sortable="false" minWidth="60"
+    			itemRenderer="org.bigbluebutton.modules.users.views.NameItemRenderer"/>
+    		<mx:DataGridColumn dataField="media" headerText="{ResourceUtil.getInstance().getString('bbb.users.usersGrid.mediaItemRenderer')}" sortable="false" width="110" minWidth="110"
+    			itemRenderer="org.bigbluebutton.modules.users.views.MediaItemRenderer"/>
+    	</mx:columns>
+    </mx:DataGrid>
+	
+	<mx:ControlBar width="100%">
+		<mx:Button id="emojiStatusBtn" icon="{images.emoji_raiseHand}" width="30" height="30"
+				   accessibilityName="{ResourceUtil.getInstance().getString('bbb.users.emojiStatusBtn.toolTip')}"
+				   toolTip="{ResourceUtil.getInstance().getString('bbb.users.emojiStatusBtn.toolTip')}" click="openEmojiStatusMenu()"
+				   visible="true" tabIndex="{partOptions.baseTabIndex+10}" />
+		<mx:Button id="settingsBtn" icon="{images.users_settings}" width="30" height="30"
+					toolTip="{ResourceUtil.getInstance().getString('bbb.users.settings.buttonTooltip')}" click="openSettings()" visible="true" tabIndex="{partOptions.baseTabIndex+15}" />
+		<mx:VBox>
+			<mx:Label text="{ResourceUtil.getInstance().getString('bbb.users.roomMuted.text')}" visible="{roomMuted}" includeInLayout="{roomMuted}" />
+			<mx:Label text="{ResourceUtil.getInstance().getString('bbb.users.roomLocked.text')}" visible="{roomLocked}" includeInLayout="{roomLocked}" />
+		</mx:VBox>
+	</mx:ControlBar>
+	
+</mdi:CustomMdiWindow>

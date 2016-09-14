@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+
+BigBlueButton open source conferencing system - http://www.bigbluebutton.org/
+
+Copyright (c) 2012 BigBlueButton Inc. and by respective authors (see below).
+
+This program is free software; you can redistribute it and/or modify it under the
+terms of the GNU Lesser General Public License as published by the Free Software
+Foundation; either version 3.0 of the License, or (at your option) any later
+version.
+
+BigBlueButton is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License along
+with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
+
+-->
+
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" 
+    title="{ResourceUtil.getInstance().getString('bbb.logout.title')}" showCloseButton="false" creationComplete="init()"
+    verticalScrollPolicy="off" horizontalScrollPolicy="off"
+    x="168" y="86" layout="vertical" width="400" height="110" horizontalAlign="center">
+	<mx:Script>
+		<![CDATA[
+			import mx.core.FlexGlobals;
+			import mx.managers.PopUpManager;
+			
+			import org.as3commons.logging.api.ILogger;
+			import org.as3commons.logging.api.getClassLogger;
+			import org.bigbluebutton.core.BBB;
+			import org.bigbluebutton.main.model.users.events.ConnectionFailedEvent;
+			import org.bigbluebutton.util.i18n.ResourceUtil;
+			
+			private static const LOGGER:ILogger = getClassLogger(LoggedOutWindow);      
+      
+			[Bindable] private var message:String = "You have logged out of the conference";
+			private var urlLoader:URLLoader;
+			
+			private function init():void {
+				addEventListener(Event.CLOSE, onUserLoggedOutWindowClose);
+			}
+			
+      private function redirect():void { 
+       	var pageHost:String = FlexGlobals.topLevelApplication.url.split("/")[0];
+       	var pageURL:String = FlexGlobals.topLevelApplication.url.split("/")[2];
+       	var request:URLRequest = new URLRequest(pageHost + "//" + pageURL + "/bigbluebutton/api/signOut");
+				LOGGER.debug("Log out url: {0}//{1}/bigbluebutton/api/signOut", [pageHost, pageURL]);
+				request.method = URLRequestMethod.GET;
+				urlLoader = new URLLoader();
+				urlLoader.addEventListener(Event.COMPLETE, handleComplete);	
+				urlLoader.addEventListener(IOErrorEvent.IO_ERROR, handleRedirectError);
+				urlLoader.load(request);
+      }
+      
+      public function getLogoutUrl():String {
+        var logoutUrl:String = BBB.initUserConfigManager().getLogoutUrl();
+        if (logoutUrl == null) {
+          LOGGER.debug("URL=[{0}]", [FlexGlobals.topLevelApplication.url]);
+          var pageHost:String = FlexGlobals.topLevelApplication.url.split("/")[0];
+          var pageURL:String = FlexGlobals.topLevelApplication.url.split("/")[2];
+          logoutUrl = pageHost + "//" + pageURL;
+        }      
+        
+        return logoutUrl;
+      }
+      
+			private function handleComplete(e:Event):void {
+				LOGGER.debug("Client URL=[{0}]", [FlexGlobals.topLevelApplication.url]);
+       
+        		var request:URLRequest = new URLRequest(getLogoutUrl());
+				LOGGER.debug("Logging out to: {0}", [getLogoutUrl()]);
+        		navigateToURL(request, '_self');          
+        
+				PopUpManager.removePopUp(this);				
+			}
+			
+			private function handleRedirectError(e:IOErrorEvent):void {
+				PopUpManager.removePopUp(this);
+			}
+
+      private function onUserLoggedOutWindowClose(e:Event):void {
+       	PopUpManager.removePopUp(this);
+      }
+			
+			public function setReason(reason:String):void{
+				switch(reason){
+					case ConnectionFailedEvent.APP_SHUTDOWN:
+						message = ResourceUtil.getInstance().getString('bbb.logout.appshutdown');
+						break;
+					case ConnectionFailedEvent.ASYNC_ERROR:
+						message = ResourceUtil.getInstance().getString('bbb.logout.asyncerror');
+						break;
+					case ConnectionFailedEvent.CONNECTION_CLOSED:
+						message = ResourceUtil.getInstance().getString('bbb.logout.connectionclosed');
+						break;
+					case ConnectionFailedEvent.CONNECTION_FAILED:
+						message = ResourceUtil.getInstance().getString('bbb.logout.connectionfailed');
+						break;
+					case ConnectionFailedEvent.CONNECTION_REJECTED:
+						message = ResourceUtil.getInstance().getString('bbb.logout.rejected');
+						break;
+					case ConnectionFailedEvent.INVALID_APP:
+						message = ResourceUtil.getInstance().getString('bbb.logout.invalidapp');
+						break;
+					case ConnectionFailedEvent.UNKNOWN_REASON:
+						message = ResourceUtil.getInstance().getString('bbb.logout.unknown');
+						break;
+                    case ConnectionFailedEvent.USER_EJECTED_FROM_MEETING:
+                        message = ResourceUtil.getInstance().getString('bbb.logout.ejectedFromMeeting');
+                        break;
+					case ConnectionFailedEvent.USER_LOGGED_OUT:
+						message = ResourceUtil.getInstance().getString('bbb.logout.usercommand');
+						redirect(); // we know that the disconnect was requested so automatically redirect
+						break;
+				}
+			}
+		]]>
+	</mx:Script>
+	<mx:VBox width="100%" height="100%" horizontalAlign="center">
+		<mx:Text text="{message}"/>
+		<mx:Button id="okBtn" label="{ResourceUtil.getInstance().getString('bbb.logout.button.label')}" click="redirect()"/>
+	</mx:VBox>
+</mx:TitleWindow> 

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  BigBlueButton open source conferencing system - http://www.bigbluebutton.org
+  
+  Copyright (c) 2010 BigBlueButton Inc. and by respective authors (see below).
+  
+  BigBlueButton is free software; you can redistribute it and/or modify it under the 
+  terms of the GNU Lesser General Public License as published by the Free Software 
+  Foundation; either version 2.1 of the License, or (at your option) any later 
+  version. 
+  
+  BigBlueButton is distributed in the hope that it will be useful, but WITHOUT ANY 
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A 
+  PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
+  
+  You should have received a copy of the GNU Lesser General Public License along 
+  with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
+ 
+  $Id: $
+--> 
+
+<mdi:CustomMdiWindow xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:mdi="org.bigbluebutton.common.*" 
+	xmlns:flc="flexlib.controls.*"
+	implements="org.bigbluebutton.common.IBbbModuleWindow" 
+	xmlns:mate="http://mate.asfusion.com/"
+	creationComplete="onCreationComplete()"
+	title="{ResourceUtil.getInstance().getString('bbb.timer.title')}"
+	showCloseButton="false">
+
+	<mx:Script>
+		<![CDATA[
+			import com.asfusion.mate.events.Dispatcher;
+			
+			import mx.binding.utils.BindingUtils;
+			import mx.collections.ArrayCollection;
+			import mx.controls.Menu;
+			import mx.controls.listClasses.IListItemRenderer;
+			import mx.core.FlexGlobals;
+			import mx.events.ListEvent;
+			import mx.events.MenuEvent;
+			import mx.managers.PopUpManager;
+			
+			import org.as3commons.logging.api.ILogger;
+			import org.as3commons.logging.api.getClassLogger;
+			import org.bigbluebutton.common.IBbbModuleWindow;
+			import org.bigbluebutton.common.Images;
+			import org.bigbluebutton.common.events.LocaleChangeEvent;
+			import org.bigbluebutton.core.UsersUtil;
+			import org.bigbluebutton.core.events.LockControlEvent;
+			import org.bigbluebutton.core.events.VoiceConfEvent;
+			import org.bigbluebutton.core.vo.LockSettingsVO;
+			import org.bigbluebutton.main.events.ShortcutEvent;
+			import org.bigbluebutton.main.views.MainCanvas;
+			import org.bigbluebutton.util.i18n.ResourceUtil;
+
+			private static const LOGGER:ILogger = getClassLogger(TimerWindow);      
+
+			private var dispatcher:Dispatcher;
+			
+			private var keyCombos:Object;
+
+			private var images:Images = new Images();
+			
+			private function onCreationComplete():void {
+				dispatcher = new Dispatcher();
+			}
+			
+			public function getPrefferedPosition():String{
+				return MainCanvas.TOP_LEFT;
+			}
+
+        ]]>
+	</mx:Script>
+	
+</mdi:CustomMdiWindow>

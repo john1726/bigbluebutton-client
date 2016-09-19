@@ -16,7 +16,7 @@
 * with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 *
 */
-package org.bigbluebutton.main.model.users.events
+package org.bigbluebutton.main.model.timer.events
 {
 	import flash.events.Event;
 

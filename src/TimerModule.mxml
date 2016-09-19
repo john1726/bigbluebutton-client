@@ -58,7 +58,7 @@
 				return _attributes.uri + "/" + _attributes.room;
 			}
 			
-			public function start():void {		
+                        public function start(attributes:Object):void {         
 				dispatcher = new Dispatcher();
 				var startEvent:StartTimerModuleEvent = new StartTimerModuleEvent(StartTimerModuleEvent.START_TIMER_MODULE);
 				startEvent.module = this;
@@ -74,5 +74,5 @@
 			}
 		]]>
 	</mx:Script>
-	
+
 </mx:Module>

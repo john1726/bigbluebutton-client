@@ -2,6 +2,17 @@
 <layouts>
   <layout name="bbb.layout.name.defaultlayout" default="true">
     <window name="NotesWindow" hidden="true" width="0.7" height="1" x="0" y="0" draggable="false" resizable="false"/>
+    <window name="TimerWindow" width="0.2" height="0.2" x="0" y="0" order="0"/>
+    <window name="UsersWindow" width="0.2" height="0.2" x="0" y="0.2" order="0"/>
+    <window name="ChatWindow" width="0.2" height="0.2" x="0" y="0.4" order="0"/>
+    <window name="BroadcastWindow" hidden="true" draggable="false" resizable="false"/>
+    <window name="VideoDock" width="0.2" height="0.4" x="0" y="0.6" order="0"/>
+    <window name="PresentationWindow" width="0.8" height="0.9946808510638298" x="0.20017366136034732" y="0" />
+    <window name="ViewersWindow" hidden="true" draggable="false" resizable="false" />
+    <window name="ListenersWindow" hidden="true" draggable="false" resizable="false"/>
+  </layout>
+  <layout name="Balanced Layout">
+    <window name="NotesWindow" hidden="true" width="0.7" height="1" x="0" y="0" draggable="false" resizable="false"/>
     <window name="BroadcastWindow" hidden="true" draggable="false" resizable="false"/>
     <window name="PresentationWindow" width="0.5137481910274964" height="0.9946808510638298" x="0.18017366136034732" y="0" />
     <window name="VideoDock" width="0.1772793053545586" height="0.30851063829787234" x="0" y="0.6875" minWidth="280" />

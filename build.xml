@@ -22,6 +22,7 @@
 	<property name="BBB_MAIN" value="BigBlueButton" />
 	<property name="BROADCAST" value="BroadcastModule" />
 	<property name="CHAT" value="ChatModule" />
+	<property name="TIMER" value="TimerModule" />
 	<property name="PRESENT" value="PresentModule" />
 	<property name="DESKSHARE" value="DeskShareModule" />
 	<property name="DESKSHARE_SA" value="DeskshareStandalone" />
@@ -192,9 +193,13 @@
     <build-module src="${SRC_DIR}" target="${BROADCAST}" />
   </target>
   	
-	<target name="build-chat" description="Compile Chat Module">
-		<build-module src="${SRC_DIR}" target="${CHAT}" />
-	</target>
+  <target name="build-chat" description="Compile Chat Module">
+    <build-module src="${SRC_DIR}" target="${CHAT}" />
+  </target>
+
+  <target name="build-timer" description="Compile Timer Module">
+    <build-module src="${SRC_DIR}" target="${TIMER}" />
+  </target>
   
   <target name="build-notes" description="Compile Notes Module">
     <build-module src="${SRC_DIR}" target="${NOTES}" />
@@ -279,6 +284,12 @@
 	<target name="build-main-chat-present" 
 			depends="build-bbb-main, build-chat, build-present, build-layout, build-broadcast, build-users"
 			description="Compile main, chat, present modules">
+	</target>
+
+	<!-- just a grouping of modules to compile -->
+	<target name="build-main-timer-present" 
+			depends="build-bbb-main, build-timer, build-present, build-layout, build-broadcast, build-users"
+			description="Compile main, timer, present modules">
 	</target>
 	
 	<!-- just a grouping of modules to compile -->
@@ -385,7 +396,7 @@
 			<echo message="Deskshare standalone built without optimization." />
 	</target>
 		
-	<target name="compile-bbb" depends="build-main-chat-present, build-deskshare-phone-video-whiteboard-dyn, copy-resource-files"
+	<target name="compile-bbb" depends="build-main-chat-present, build-main-timer-present, build-deskshare-phone-video-whiteboard-dyn, copy-resource-files"
 			description="Compiling the BBB without copying config.xml">	
 	</target>
 

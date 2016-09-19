@@ -29,8 +29,14 @@
 	title="{ResourceUtil.getInstance().getString('bbb.timer.title')}"
 	showCloseButton="false">
 
+	<mate:Listener type="{StartTimerEvent.START_TIMER}" method="handleStartTimer" />
+	<mate:Listener type="{StopTimerEvent.STOP_TIMER}" method="handleStopTimer" />
+
 	<mx:Script>
 		<![CDATA[
+                        import flash.utils.Timer;
+                        import flash.events.TimerEvent;
+
 			import com.asfusion.mate.events.Dispatcher;
 			
 			import mx.binding.utils.BindingUtils;
@@ -48,6 +54,8 @@
 			import org.bigbluebutton.common.Images;
 			import org.bigbluebutton.common.events.LocaleChangeEvent;
 			import org.bigbluebutton.core.UsersUtil;
+			import org.bigbluebutton.main.model.timer.events.StartTimerEvent;
+			import org.bigbluebutton.main.model.timer.events.StopTimerEvent;
 			import org.bigbluebutton.core.events.LockControlEvent;
 			import org.bigbluebutton.core.events.VoiceConfEvent;
 			import org.bigbluebutton.core.vo.LockSettingsVO;
@@ -59,19 +67,53 @@
 
 			private var dispatcher:Dispatcher;
 			
-			private var keyCombos:Object;
+                        private const TIMER_INTERVAL:int = 10;
 
-			private var images:Images = new Images();
+                        private var baseTimer:int;
+
+                        private var t:Timer;
 			
 			private function onCreationComplete():void {
 				dispatcher = new Dispatcher();
+
+                                t = new Timer(TIMER_INTERVAL);
+                                t.addEventListener(TimerEvent.TIMER, updateTimer);
 			}
 			
 			public function getPrefferedPosition():String{
 				return MainCanvas.TOP_LEFT;
 			}
 
+			private function handleStartTimer(e:StartTimerEvent):void {
+                            startTimer();
+			}
+
+			private function handleStopTimer(e:StopTimerEvent):void {
+                            stopTimer();
+			}
+
+                        private function updateTimer(evt:TimerEvent):void {
+                            var d:Date = new Date(getTimer() - baseTimer);
+                            counter.text = dateFormatter.format(d);
+                        }
+
+                        private function startTimer():void {
+                            baseTimer = getTimer();
+                            t.start();
+                        }
+
+                        private function stopTimer():void {
+                            t.stop();
+                        }
+
         ]]>
 	</mx:Script>
-	
+    <mx:DateFormatter id="dateFormatter" formatString="H:NN:SS" />
+
+    <mx:ApplicationControlBar dock="true">
+        <mx:Button label="Start timer" click="startTimer()" />
+        <mx:Button label="Stop timer" click="stopTimer()" />
+    </mx:ApplicationControlBar>
+
+    <mx:Label id="counter" fontSize="96" />
 </mdi:CustomMdiWindow>

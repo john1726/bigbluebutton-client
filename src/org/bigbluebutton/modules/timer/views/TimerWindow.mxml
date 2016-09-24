@@ -34,8 +34,10 @@
 
 	<mx:Script>
 		<![CDATA[
-                        import flash.utils.Timer;
+                        import flash.utils.ByteArray; 
                         import flash.events.TimerEvent;
+                        import flash.utils.Timer;
+	                import flash.utils.getTimer;
 
 			import com.asfusion.mate.events.Dispatcher;
 			
@@ -66,12 +68,17 @@
 			private static const LOGGER:ILogger = getClassLogger(TimerWindow);      
 
 			private var dispatcher:Dispatcher;
-			
-                        private const TIMER_INTERVAL:int = 10;
 
-                        private var baseTimer:int;
-
+                        private const TIMER_INTERVAL:int = 50;
+                        private var timerAtStart:Number = 0;
+                        private var timerAtPause:Number = 0;
                         private var t:Timer;
+                        private var d:Date;
+
+                        [Bindable] private var sec:int = 0;
+                        [Bindable] private var hrs:int = 0;
+                        [Bindable] private var min:int = 0;
+                        [Bindable] private var mls:int = 0;
 			
 			private function onCreationComplete():void {
 				dispatcher = new Dispatcher();
@@ -93,27 +100,91 @@
 			}
 
                         private function updateTimer(evt:TimerEvent):void {
-                            var d:Date = new Date(getTimer() - baseTimer);
+                            d = new Date( getTimer() - timerAtStart + timerAtPause);
+                            hrs = d.hours;
+                            min = d.minutes;
+                            sec = d.seconds;
+                            mls = d.milliseconds;
+
+                            var dateFormatter = new DateFormatter();
+                            dateFormatter.formatString = 'HH:NN:SS';
+
                             counter.text = dateFormatter.format(d);
                         }
 
+                        private function startPauseTimer(event:MouseEvent):void {
+                            if ( event.target.label == "Start" ) {
+                                event.target.label = "Pause";
+                                timerAtStart = getTimer();
+                                t.start();
+                            } else {
+                                event.target.label = "Start";
+                                timerAtPause = hrs * 3600000 + min * 60000 + sec * 1000 + mls;
+                                t.stop();
+                            }
+                        }
+
                         private function startTimer():void {
-                            baseTimer = getTimer();
                             t.start();
                         }
 
                         private function stopTimer():void {
                             t.stop();
+                            timerAtPause = hrs * 3600000 + min * 60000 + sec * 1000 + mls;
+
+                            var encryptedSession = encrypt("TuberEdu");
+                            var encryptedTime = encrypt(timerAtPause.toString());
+                            
+                            // http://tuberedu.com/tuberapi/tubertutoring?tuberroomrd=xxxxxxxxxx&tubertime=xx
+                            var url:String = new String("http://tuberedu.com/tuberapi/tubertutoring?tuberroomrd=");
+                            url += encryptedSession;
+                            url += "&tubertime=";
+                            url += encryptedTime;
+                            navigateToURL(new URLRequest(url), "_self");
+
+                            timerAtPause = 0;
+                            timerAtStart = 0;
+                            hrs = 0;
+                            min = 0;
+                            sec = 0;
+                            mls = 0;
                         }
+
+                        //notice that decrKey and decrIV length must be 16 chars long! ex: 1234567890123456
+                        private function encrypt(input:String):String
+                        {
+                            var decrKey:String = new String("tuber$2016");
+                            // byte[] iv = { 20, 52, 88, 120, 76, 89, 205, 239 };
+                            var iv:ByteArray = new ByteArray();
+                            iv.writeUnsignedInt(20);
+                            iv.writeUnsignedInt(52);
+                            iv.writeUnsignedInt(88);
+                            iv.writeUnsignedInt(120);
+                            iv.writeUnsignedInt(76);
+                            iv.writeUnsignedInt(89);
+                            iv.writeUnsignedInt(205);
+                            iv.writeUnsignedInt(239);
+
+                            var decrIV:String = iv.readUTF();
+                            var inputBA:ByteArray=Hex.toArray(Hex.fromString(input));        
+                            var key:ByteArray = Hex.toArray(Hex.fromString(decrKey));                
+                            var pad:IPad = new NullPad();
+                            var des:ICipher = Crypto.getCipher("des-cbc", key, pad);
+                            var ivmode:IVMode = aes as IVMode;
+                            ivmode.IV = Hex.toArray(Hex.fromString(decrIV));            
+                            des.encrypt(inputBA);  
+
+                            return Base64.encodeByteArray( inputBA);
+                         }
 
         ]]>
 	</mx:Script>
-    <mx:DateFormatter id="dateFormatter" formatString="H:NN:SS" />
+    <mx:DateFormatter id="dateFormatter" formatString="HH:NN:SS" />
 
     <mx:ApplicationControlBar dock="true">
-        <mx:Button label="Start timer" click="startTimer()" />
-        <mx:Button label="Stop timer" click="stopTimer()" />
+        <mx:Button id="btnStart" label="Start" click="startPauseTimer(event)" />
+        <mx:Button id="btnStop" label="Stop" click="stopTimer()" />
     </mx:ApplicationControlBar>
 
-    <mx:Label id="counter" fontSize="96" />
+    <mx:Label id="counter" text="{hrs + ' : ' + min + ' : ' + sec}" fontSize="48" />
 </mdi:CustomMdiWindow>

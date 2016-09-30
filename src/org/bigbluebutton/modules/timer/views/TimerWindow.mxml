@@ -95,6 +95,7 @@
 
                                 t = new Timer(TIMER_INTERVAL);
                                 t.addEventListener(TimerEvent.TIMER, updateTimer);
+                            LOGGER.debug("TimerWindows.mxml: test message");
 			}
 			
 			public function getPrefferedPosition():String{

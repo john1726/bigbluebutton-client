@@ -57,7 +57,7 @@ package org.bigbluebutton.common {
 	 * - uri     : HOST will contain the URL of the logging server
 	 */
 	public class LogUtil {
-		public static const TRACE:String = "trace";
+		public static const TRACE:String = "jsnlog";
 		
 		public static const LOG_WINDOW:String = "logwindow";
 		
@@ -69,7 +69,8 @@ package org.bigbluebutton.common {
 		
 		private static var loggingEnabled:Boolean;
 		
-		private static var logLevel:String = "info";
+		/* private static var logLevel:String = "info"; */
+		private static var logLevel:String = "debug";
 		
 		private static var loggingTargetName:String = "trace";
 		

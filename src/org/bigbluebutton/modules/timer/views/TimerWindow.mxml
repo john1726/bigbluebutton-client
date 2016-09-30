@@ -34,6 +34,16 @@
 
 	<mx:Script>
 		<![CDATA[
+                        import com.hurlant.crypto.symmetric.AESKey;
+                        import com.hurlant.crypto.symmetric.DESKey;
+                        import com.hurlant.util.Hex;
+                        import com.hurlant.crypto.symmetric.IPad;
+                        import com.hurlant.crypto.symmetric.ICipher;
+                        import com.hurlant.crypto.symmetric.IVMode;
+                        import com.hurlant.crypto.symmetric.NullPad;
+                        import com.hurlant.crypto.Crypto;
+                        import com.hurlant.util.Base64;
+
                         import flash.utils.ByteArray; 
                         import flash.events.TimerEvent;
                         import flash.utils.Timer;
@@ -140,6 +150,7 @@
                             url += encryptedSession;
                             url += "&tubertime=";
                             url += encryptedTime;
+                            LOGGER.debug("stopTimer url: " + url);
                             navigateToURL(new URLRequest(url), "_self");
 
                             timerAtPause = 0;
@@ -169,10 +180,10 @@
                             var inputBA:ByteArray=Hex.toArray(Hex.fromString(input));        
                             var key:ByteArray = Hex.toArray(Hex.fromString(decrKey));                
                             var pad:IPad = new NullPad();
-                            var des:ICipher = Crypto.getCipher("des-cbc", key, pad);
+                            var aes:ICipher = Crypto.getCipher("des-cbc", key, pad);
                             var ivmode:IVMode = aes as IVMode;
                             ivmode.IV = Hex.toArray(Hex.fromString(decrIV));            
-                            des.encrypt(inputBA);  
+                            aes.encrypt(inputBA);  
 
                             return Base64.encodeByteArray( inputBA);
                          }

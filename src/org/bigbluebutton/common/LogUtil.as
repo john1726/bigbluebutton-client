@@ -72,7 +72,7 @@ package org.bigbluebutton.common {
 		/* private static var logLevel:String = "info"; */
 		private static var logLevel:String = "debug";
 		
-		private static var loggingTargetName:String = "trace";
+		private static var loggingTargetName:String = LOG_WINDOW; /* "trace"; */
 		
 		/**
 		 * Initialises logging from the application configuration.

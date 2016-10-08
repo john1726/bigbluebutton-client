@@ -41,6 +41,10 @@
 			baseTabIndex="301"
 		/>
 
+		<module name="TimerModule" url="http://HOST/client/TimerModule.swf?v=VERSION" 
+			uri="rtmp://HOST/bigbluebutton" 
+			baseTabIndex="101"
+		/>
 		
 		<module name="DeskShareModule" 
 			url="http://HOST/client/DeskShareModule.swf?v=VERSION" 

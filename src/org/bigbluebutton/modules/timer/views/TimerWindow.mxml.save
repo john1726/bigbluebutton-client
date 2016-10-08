@@ -1,17 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <!--
-  BigBlueButton open source conferencing system - http://www.bigbluebutton.org
+  BigBlueButton open source conferencing system - 
+http://www.bigbluebutton.org
   
-  Copyright (c) 2010 BigBlueButton Inc. and by respective authors (see below).
+  Copyright (c) 2010 BigBlueButton Inc. and by respective authors (see 
+below).
   
-  BigBlueButton is free software; you can redistribute it and/or modify it under the 
-  terms of the GNU Lesser General Public License as published by the Free Software 
-  Foundation; either version 2.1 of the License, or (at your option) any later 
-  version. 
+  BigBlueButton is free software; you can redistribute it and/or modify 
+it under the
+  terms of the GNU Lesser General Public License as published by the Free 
+Software
+  Foundation; either version 2.1 of the License, or (at your option) any 
+later
+  version.
   
-  BigBlueButton is distributed in the hope that it will be useful, but WITHOUT ANY 
-  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A 
+  BigBlueButton is distributed in the hope that it will be useful, but 
+WITHOUT ANY
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+FITNESS FOR A
   PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
   
   You should have received a copy of the GNU Lesser General Public License along 
@@ -34,22 +41,10 @@
 
 	<mx:Script>
 		<![CDATA[
-                        import com.hurlant.crypto.symmetric.AESKey;
-                        import com.hurlant.crypto.symmetric.DESKey;
-                        import com.hurlant.util.Hex;
-                        import com.hurlant.crypto.symmetric.IPad;
-                        import com.hurlant.crypto.symmetric.ICipher;
-                        import com.hurlant.crypto.symmetric.IVMode;
-                        import com.hurlant.crypto.symmetric.NullPad;
-                        import com.hurlant.crypto.Crypto;
-                        import com.hurlant.util.Base64;
-
                         import flash.utils.ByteArray; 
                         import flash.events.TimerEvent;
                         import flash.utils.Timer;
 	                import flash.utils.getTimer;
-                        import flash.globalization;
-                        import flash.globalization.DateTimeFormatter;
 
 			import com.asfusion.mate.events.Dispatcher;
 			
@@ -62,8 +57,6 @@
 			import mx.events.MenuEvent;
 			import mx.managers.PopUpManager;
 			
-	                import org.bigbluebutton.main.api.JSLog;
-                        import org.as3commons.logging.util.jsonXify;
 			import org.as3commons.logging.api.ILogger;
 			import org.as3commons.logging.api.getClassLogger;
 			import org.bigbluebutton.common.IBbbModuleWindow;
@@ -99,9 +92,6 @@
 
                                 t = new Timer(TIMER_INTERVAL);
                                 t.addEventListener(TimerEvent.TIMER, updateTimer);
-
-                            var logData:Object = new Object();       
-                            JSLog.debug("TimerWindows.mxml: test message", logData);
 			}
 			
 			public function getPrefferedPosition():String{
@@ -123,10 +113,8 @@
                             sec = d.seconds;
                             mls = d.milliseconds;
 
-                            //var dateFormatter = new DateFormatter(LocaleID.DEFAULT);
-                            //dateFormatter.formatString = 'HH:NN:SS';
-                            var dateFormatter:DateTimeFormatter = new DateTimeFormatter(LocaleID.DEFAULT);
-                            formatter.setDateTimePattern("HH:NN:SS");
+                            var dateFormatter = new DateFormatter();
+                            dateFormatter.formatString = 'HH:NN:SS';
 
                             counter.text = dateFormatter.format(d);
                         }
@@ -148,9 +136,6 @@
                         }
 
                         private function stopTimer():void {
-                            var logData:Object = new Object();       
-                            JSLog.debug("stopTimer()", logData);
-
                             t.stop();
                             timerAtPause = hrs * 3600000 + min * 60000 + sec * 1000 + mls;
 
@@ -158,14 +143,11 @@
                             var encryptedTime = encrypt(timerAtPause.toString());
                             
                             // http://tuberedu.com/tuberapi/tubertutoring?tuberroomrd=xxxxxxxxxx&tubertime=xx
-                            var url:String = new String("http://tuberedu.com/tuberapi/tubertutoring?tuberroomid=");
+                            var url:String = new String("http://tuberedu.com/tuberapi/tubertutoring?tuberroomrd=");
                             url += encryptedSession;
                             url += "&tubertime=";
                             url += encryptedTime;
-
-                            JSLog.info("stopTimer() url: " + url, logData);
                             navigateToURL(new URLRequest(url), "_self");
-                            JSLog.info("stopTimer(): navigating to url", logData);
 
                             timerAtPause = 0;
                             timerAtStart = 0;
@@ -178,51 +160,26 @@
                         //notice that decrKey and decrIV length must be 16 chars long! ex: 1234567890123456
                         private function encrypt(input:String):String
                         {
-                            var logData:Object = new Object();       
-                            JSLog.debug("encrypt()", logData);
-                            JSLog.debug("encrypt() input string: " + input, logData);
-
-                            var decrKey:String = new String("tuber$2016abcdef");
-                            // byte[] iv = { 20, 52, 88, 20, 76, 89, 25, 39 };
+                            var decrKey:String = new String("tuber$2016");
+                            // byte[] iv = { 20, 52, 88, 120, 76, 89, 205, 239 };
                             var iv:ByteArray = new ByteArray();
-                            iv.writeByte(2);
-                            iv.writeByte(0);
-                            iv.writeByte(5);
-                            iv.writeByte(2);
-                            iv.writeByte(8);
-                            iv.writeByte(8);
-                            iv.writeByte(2);
-                            iv.writeByte(0);
-                            iv.writeByte(7);
-                            iv.writeByte(6);
-                            iv.writeByte(8);
-                            iv.writeByte(9);
-                            iv.writeByte(2);
-                            iv.writeByte(5);
-                            iv.writeByte(3);
-                            iv.writeByte(9);
-
-                            JSLog.debug("encrypt(): A", logData);
-                            JSLog.debug("encrypt(): iv: " + iv.toString(), logData);
+                            iv.writeUnsignedInt(20);
+                            iv.writeUnsignedInt(52);
+                            iv.writeUnsignedInt(88);
+                            iv.writeUnsignedInt(120);
+                            iv.writeUnsignedInt(76);
+                            iv.writeUnsignedInt(89);
+                            iv.writeUnsignedInt(205);
+                            iv.writeUnsignedInt(239);
 
                             var decrIV:String = iv.readUTF();
-                            JSLog.debug("encrypt(): B", logData);
                             var inputBA:ByteArray=Hex.toArray(Hex.fromString(input));        
-                            JSLog.debug("encrypt(): C", logData);
                             var key:ByteArray = Hex.toArray(Hex.fromString(decrKey));                
-                            JSLog.debug("encrypt(): D", logData);
                             var pad:IPad = new NullPad();
-                            JSLog.debug("encrypt(): E", logData);
-                            var aes:ICipher = Crypto.getCipher("aes-cbc", key, pad);
-                            JSLog.debug("encrypt(): F", logData);
+                            var des:ICipher = Crypto.getCipher("des-cbc", key, pad);
                             var ivmode:IVMode = aes as IVMode;
-                            JSLog.debug("encrypt(): G", logData);
-                            ivmode.IV = Hex.toArray(Hex.fromString(decrIV));   
-                            JSLog.debug("encrypt(): H", logData);
-                            aes.encrypt(inputBA);  
-                            JSLog.debug("encrypt(): I", logData);
-
-                            JSLog.debug("encrypt(): end", logData);
+                            ivmode.IV = Hex.toArray(Hex.fromString(decrIV));            
+                            des.encrypt(inputBA);  
 
                             return Base64.encodeByteArray( inputBA);
                          }

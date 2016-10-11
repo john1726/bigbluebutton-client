@@ -33,7 +33,7 @@
 	<mate:Listener type="{StopTimerEvent.STOP_TIMER}" method="handleStopTimer" />
 
 	<mx:Script>
-		<![CDATA[
+		<![CDATA[ 
                         import com.hurlant.crypto.symmetric.AESKey;
                         import com.hurlant.crypto.symmetric.DESKey;
                         import com.hurlant.util.Hex;
@@ -48,7 +48,7 @@
                         import flash.events.TimerEvent;
                         import flash.utils.Timer;
 	                import flash.utils.getTimer;
-                        import flash.globalization;
+                        import flash.globalization.LocaleID;
                         import flash.globalization.DateTimeFormatter;
 
 			import com.asfusion.mate.events.Dispatcher;
@@ -83,22 +83,28 @@
 
 			private var dispatcher:Dispatcher;
 
-                        private const TIMER_INTERVAL:int = 50;
-                        private var timerAtStart:Number = 0;
-                        private var timerAtPause:Number = 0;
-                        private var t:Timer;
+                        private const TIMER_INTERVAL:int = 1000;
+                        private var stopwatch:Timer;
                         private var d:Date;
 
-                        [Bindable] private var sec:int = 0;
-                        [Bindable] private var hrs:int = 0;
-                        [Bindable] private var min:int = 0;
-                        [Bindable] private var mls:int = 0;
+                        // Time stamps
+		        private var pauseTime:Number = 0;
+		        private var pauseLength:Number = 0;
+		        private var buttonPressTime:Number = 0;
+		
+                        // Flag
+		        private var timing:Boolean = false;
+
+                        [Bindable] private var hours:int = 0;
+                        [Bindable] private var seconds:int = 0;
+                        [Bindable] private var minutes:int = 0;
+                        [Bindable] private var milli:int = 0;
 			
 			private function onCreationComplete():void {
-				dispatcher = new Dispatcher();
+		            dispatcher = new Dispatcher();
 
-                                t = new Timer(TIMER_INTERVAL);
-                                t.addEventListener(TimerEvent.TIMER, updateTimer);
+                            stopwatch = new Timer(TIMER_INTERVAL);
+                            stopwatch.addEventListener(TimerEvent.TIMER, updateTimer);
 
                             var logData:Object = new Object();       
                             JSLog.debug("TimerWindows.mxml: test message", logData);
@@ -117,45 +123,66 @@
 			}
 
                         private function updateTimer(evt:TimerEvent):void {
-                            d = new Date( getTimer() - timerAtStart + timerAtPause);
-                            hrs = d.hours;
-                            min = d.minutes;
-                            sec = d.seconds;
-                            mls = d.milliseconds;
+			    var totalTime:Number = (getTimer()/1000)-pauseLength;
+			    var goTime:Number = totalTime-buttonPressTime;
+			
+		            if( timing ) 
+			    {
+				// Calculate time
+				hours = Math.floor(goTime/3600);
+				minutes = Math.floor((goTime/3600-hours)*60);
+				seconds = Math.floor(((goTime/3600-hours)*60-minutes)*60);
+				milli = Math.floor((goTime-(seconds+(minutes*60)+(hours*3600)))*100);				
+			    }
 
-                            //var dateFormatter = new DateFormatter(LocaleID.DEFAULT);
-                            //dateFormatter.formatString = 'HH:NN:SS';
-                            var dateFormatter:DateTimeFormatter = new DateTimeFormatter(LocaleID.DEFAULT);
-                            formatter.setDateTimePattern("HH:NN:SS");
-
-                            counter.text = dateFormatter.format(d);
                         }
 
                         private function startPauseTimer(event:MouseEvent):void {
+                            var logData:Object = new Object();       
                             if ( event.target.label == "Start" ) {
                                 event.target.label = "Pause";
-                                timerAtStart = getTimer();
-                                t.start();
+				pause(false);
+                                stopwatch.start();
                             } else {
                                 event.target.label = "Start";
-                                timerAtPause = hrs * 3600000 + min * 60000 + sec * 1000 + mls;
-                                t.stop();
+				pause(true);
+                                stopwatch.stop();
                             }
                         }
 
                         private function startTimer():void {
-                            t.start();
+                            var logData:Object = new Object();       
+                            JSLog.debug("startTimer()", logData);
+                            stopwatch.start();
                         }
+
+                        public function pause(b:Boolean):void
+		        {
+                            var logData:Object = new Object();       
+			    if( b ){
+				pauseTime = getTimer()/1000;
+                                JSLog.debug("pause(): pauseTime: " + pauseTime, logData);
+			    }else{
+				pauseLength = ((getTimer()/1000)-pauseTime)+pauseLength;
+                                JSLog.debug("pause(): pauseLength: " + pauseLength, logData);
+			    }
+			    timing = !b;
+		        }
 
                         private function stopTimer():void {
                             var logData:Object = new Object();       
-                            JSLog.debug("stopTimer()", logData);
 
-                            t.stop();
-                            timerAtPause = hrs * 3600000 + min * 60000 + sec * 1000 + mls;
+                            stopwatch.stop();
+			    buttonPressTime = (getTimer()/1000)-pauseLength;
+                            JSLog.debug("stopTimer(): buttonPressTime: " + buttonPressTime, logData);
+                            JSLog.debug("stopTimer(): hours: " + hours, logData);
+                            JSLog.debug("stopTimer(): minutes: " + minutes, logData);
+                            JSLog.debug("stopTimer(): seconds: " + seconds, logData);
+                            JSLog.debug("stopTimer(): milli: " + milli, logData);
+			    pause(true);
 
                             var encryptedSession = encrypt("TuberEdu");
-                            var encryptedTime = encrypt(timerAtPause.toString());
+                            var encryptedTime = encrypt(buttonPressTime.toString());
                             
                             // http://tuberedu.com/tuberapi/tubertutoring?tuberroomrd=xxxxxxxxxx&tubertime=xx
                             var url:String = new String("http://tuberedu.com/tuberapi/tubertutoring?tuberroomid=");
@@ -166,13 +193,10 @@
                             JSLog.info("stopTimer() url: " + url, logData);
                             navigateToURL(new URLRequest(url), "_self");
                             JSLog.info("stopTimer(): navigating to url", logData);
-
-                            timerAtPause = 0;
-                            timerAtStart = 0;
-                            hrs = 0;
-                            min = 0;
-                            sec = 0;
-                            mls = 0;
+                            hours = 0;
+                            minutes = 0;
+                            seconds = 0;
+                            milli = 0;
                         }
 
                         //notice that decrKey and decrIV length must be 16 chars long! ex: 1234567890123456
@@ -236,5 +260,5 @@
         <mx:Button id="btnStop" label="Stop" click="stopTimer()" />
     </mx:ApplicationControlBar>
 
-    <mx:Label id="counter" text="{hrs + ' : ' + min + ' : ' + sec}" fontSize="48" />
+    <mx:Label id="counter" text="{hours + ' : ' + minutes + ' : ' + seconds}" fontSize="48" />
 </mdi:CustomMdiWindow>

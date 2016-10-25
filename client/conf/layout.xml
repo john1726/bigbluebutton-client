@@ -2,11 +2,11 @@
 <layouts>
   <layout name="bbb.layout.name.defaultlayout" default="true">
     <window name="NotesWindow" hidden="true" width="0.7" height="1" x="0" y="0" draggable="false" resizable="false"/>
-    <window name="TimerWindow" width="0.2" height="0.2" x="0" y="0" order="0"/>
-    <window name="UsersWindow" width="0.2" height="0.2" x="0" y="0.2" order="0"/>
-    <window name="ChatWindow" width="0.2" height="0.2" x="0" y="0.4" order="0"/>
+    <window name="TimerWindow" width="0.2" height="0.075" x="0" y="0" order="0"/>
+    <window name="UsersWindow" width="0.2" height="0.25" x="0" y="0.075" order="0"/>
+    <window name="ChatWindow" width="0.2" height="0.2" x="0" y="0.325" order="0"/>
     <window name="BroadcastWindow" hidden="true" draggable="false" resizable="false"/>
-    <window name="VideoDock" width="0.2" height="0.4" x="0" y="0.6" order="0"/>
+    <window name="VideoDock" width="0.2" height="0.475" x="0" y="0.6" order="0"/>
     <window name="PresentationWindow" width="0.8" height="0.9946808510638298" x="0.20017366136034732" y="0" />
     <window name="ViewersWindow" hidden="true" draggable="false" resizable="false" />
     <window name="ListenersWindow" hidden="true" draggable="false" resizable="false"/>
@@ -15,15 +15,28 @@
     <window name="NotesWindow" hidden="true" width="0.7" height="1" x="0" y="0" draggable="false" resizable="false"/>
     <window name="BroadcastWindow" hidden="true" draggable="false" resizable="false"/>
     <window name="PresentationWindow" width="0.5137481910274964" height="0.9946808510638298" x="0.18017366136034732" y="0" />
-    <window name="VideoDock" width="0.1772793053545586" height="0.30851063829787234" x="0" y="0.6875" minWidth="280" />
+    <window name="VideoDock" width="0.1772793053545586" height="0.60851063829787234" x="0" y="0.5625" minWidth="280" />
     <window name="ChatWindow" width="0.3031837916063676" height="0.9960106382978723" x="0.6968162083936325" y="0" />
-    <window name="UsersWindow" width="0.1772793053545586" height="0.6795212765957446" x="0" y="0" minWidth="280" />
+    <window name="TimerWindow" width="0.1772793053545586" height="0.075" x="0" y="0" order="0"/>
+    <window name="UsersWindow" width="0.1772793053545586" height="0.4795212765957446" x="0" y="0.075" minWidth="280" />
+    <window name="ViewersWindow" width="0.1772793053545586" height="0.33643617021276595" x="0" y="0" />
+    <window name="ListenersWindow" width="0.1772793053545586" height="0.33643617021276595" x="0" y="0.34308510638297873" />
+  </layout>
+  <layout name="Group Layout">
+    <window name="NotesWindow" hidden="true" width="0.7" height="1" x="0" y="0" draggable="false" resizable="false"/>
+    <window name="BroadcastWindow" hidden="true" draggable="false" resizable="false"/>
+    <window name="PresentationWindow" width="0.5137481910274964" height="0.9946808510638298" x="0.18017366136034732" y="0" />
+    <window name="VideoDock" width="0.1772793053545586" height="0.58351063829787234" x="0" y="0.5685" minWidth="280" />
+    <window name="UsersWindow" width="0.3031837916063676" height="0.9960106382978723" x="0.6968162083936325" y="0" />
+    <window name="TimerWindow" width="0.1772793053545586" height="0.075" x="0" y="0" order="0"/>
+    <window name="ChatWindow" width="0.1772793053545586" height="0.5045212765957446" x="0" y="0.075" minWidth="280" />
     <window name="ViewersWindow" width="0.1772793053545586" height="0.33643617021276595" x="0" y="0" />
     <window name="ListenersWindow" width="0.1772793053545586" height="0.33643617021276595" x="0" y="0.34308510638297873" />
   </layout>
   <layout name="bbb.layout.name.videochat">
     <window name="NotesWindow" hidden="true" width="0.7" height="1" x="0" y="0" draggable="false" resizable="false"/>
     <window name="BroadcastWindow" hidden="true" draggable="false" resizable="false"/>
+    <window name="TimerWindow" hidden="true" draggable="false" resizable="false" />
     <window name="VideoDock" width="1" height="1" x="0" y="0" order="0"/>
     <window name="ChatWindow" width="0.303125" height="0.9955703211517165" x="0.3229166666666667" y="0.9656699889258029" order="4" hidden="true" />
     <window name="PresentationWindow" minimized="true" order="1" hidden="true" />
@@ -35,6 +48,7 @@
     <window name="NotesWindow" hidden="true" width="0.7" height="1" x="0" y="0" draggable="false" resizable="false"/>
     <window name="BroadcastWindow" hidden="true" draggable="false" resizable="false"/>
     <window name="VideoDock" width="0.6570188133140377" height="0.9960106382978723" x="0" y="0" />
+    <window name="TimerWindow" hidden="true" draggable="false" resizable="false" />
     <window name="ChatWindow" width="0.3393632416787265" height="0.5305851063829787" x="0.658465991316932" y="0" />
     <window name="UsersWindow" hidden="true" />
     <window name="PresentationWindow" width="0.34008683068017365" height="0.4601063829787234" x="0.658465991316932" y="0.535904255319149" />
@@ -43,6 +57,7 @@
     <window name="NotesWindow" hidden="true" width="0.7" height="1" x="0" y="0" draggable="false" resizable="false"/>
     <window name="BroadcastWindow" hidden="true" draggable="false" resizable="false"/>
     <window name="UsersWindow" minimized="true" />
+    <window name="TimerWindow" hidden="true" draggable="false" resizable="false" />
     <window name="VideoDock" width="0.2923611111111111" height="0.4640957446808511" x="0.7048611111111112" y="0.535904255319149" />
     <window name="PresentationWindow" width="0.7027777777777777" height="0.9986702127659575" x="0" y="0" />
     <window name="ChatWindow" width="0.2923611111111111" height="0.5305851063829787" x="0.7048611111111112" y="0" />
@@ -51,6 +66,7 @@
     <window name="NotesWindow" hidden="true" width="0.7" height="1" x="0" y="0" draggable="false" resizable="false"/>
     <window name="BroadcastWindow" hidden="true" draggable="false" resizable="false"/>
     <window name="ChatWindow" width="0.4597222222222222" height="0.9958677685950413" x="0.2263888888888889" y="0" />
+    <window name="TimerWindow" hidden="true" draggable="false" resizable="false" />
     <window name="UsersWindow" width="0.22152777777777777" height="0.9958677685950413" x="0" y="0" minWidth="280" />
     <window name="PresentationWindow" width="0.3104166666666667" height="0.5537190082644629" x="0.6895833333333333" y="0" />
     <window name="VideoDock" width="0.30972222222222223" height="0.4357198347107438" x="0.6902777777777778" y="0.558870523415978" />
@@ -61,6 +77,7 @@
     <window name="UsersWindow" hidden="true" />
     <window name="VideoDock" width="0.2923611111111111" height="0.4640957446808511" x="0.7048611111111112" y="0.535904255319149" />
     <window name="PresentationWindow" width="0.7027777777777777" height="0.9986702127659575" x="0" y="0" />
+    <window name="TimerWindow" hidden="true" draggable="false" resizable="false" />
     <window name="ChatWindow" width="0.2923611111111111" height="0.5305851063829787" x="0.7048611111111112" y="0" />
   </layout>	
   <layout name="bbb.layout.name.lecture" role="presenter">
@@ -74,6 +91,7 @@
   <layout name="bbb.layout.name.lecture" role="moderator">
     <window name="NotesWindow" hidden="true" width="0.7" height="1" x="0" y="0" draggable="false" resizable="false"/>
     <window name="BroadcastWindow" hidden="true" draggable="false" resizable="false"/>
+    <window name="TimerWindow" hidden="true" draggable="false" resizable="false" />
     <window name="ChatWindow" width="0.4597222222222222" height="0.9958677685950413" x="0.2263888888888889" y="0" />
     <window name="UsersWindow" width="0.22152777777777777" height="0.9944903581267218" x="0" y="0" minWidth="280" />
     <window name="PresentationWindow" width="0.3104166666666667" height="0.5537190082644629" x="0.6895833333333333" y="0" />
